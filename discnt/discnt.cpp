@@ -3,45 +3,47 @@
 #include <iostream>
 
 int search_index(int price, int **d_prices, int index) {
-  int left = 0, right = index;
-  int mid;
+    int left = 0, right = index;
+    int mid;
   
-  while (left < right) {
-    mid = (right - left) / 2;
-    
-    if (price <= *d_prices[left] && price > *d_prices[mid]) {
-      right = mid;
-    } else {
-      left = mid;
+    while (left < right) {
+        mid = (right + left) / 2;
+
+        if (price <= *d_prices[left] && price > *d_prices[mid]) {
+            right = mid;
+        } else {
+            left = mid;
+        }
+
+        if (right - left == 1) {
+            left = right;
+        }
     }
-  }
   
-  if (price == *d_prices[left]) {
-    left++;
-  }
+    if (price == *d_prices[left]) {
+        left++;
+    }
   
   return left;
 }
 
 void insert(int *p, int index, int **d_prices, int *d_p_index, int quantity) {
-  int i, *temp;
+    int i, *temp, *mem = p;
 
-  if (index >= quantity) {
-    return;
-  }
-  
-  for (i = index; i <= *d_p_index; i++) {
-    temp = d_prices[i];
-    d_prices[i] = p;
-    
-    if (i == *d_p_index && quantity - *d_p_index > 1) {
-      d_prices[i + 1] = temp;
+    if (index >= quantity) {
+        return;
     }
-  }
   
-  if (quantity - *d_p_index > 1) {
-      (*d_p_index)++;
-  }
+    for (i = index; i <= *d_p_index; i++) {
+        temp = d_prices[i];
+        d_prices[i] = mem;
+        mem = temp;
+    }
+
+    if (quantity - *d_p_index > 1) {
+        (*d_p_index)++;
+        d_prices[*d_p_index] = mem;
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -50,14 +52,13 @@ int main(int argc, char *argv[]) {
     int prices[10001], quantity = 0, price, discount;
     int discount_quantity, discount_prices_index = -1;
     int **discount_prices;
-    int prices_sum = 0, discount_prices_sum = 0;
-    float sum;
+    float sum, prices_sum = 0.0, discount_prices_sum = 0.0;
     int i, insert_index;
 
     if (argc >= 2) {
         input_file = argv[1];
     } else {
-        //input_file = "/Users/red_lion/Documents/Projects/GitHub/algorithms-lits/discnt/inputData/08.in";
+        //input_file = "/Users/red_lion/Documents/Projects/GitHub/algorithms-lits/discnt/inputData/01.in";
         input_file = "discnt.in";
     }
 
