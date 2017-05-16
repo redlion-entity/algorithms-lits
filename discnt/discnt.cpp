@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
     int prices[10001], quantity = 0, price, discount;
     int discount_quantity, discount_prices_index = -1;
     int **discount_prices;
-    float sum, prices_sum = 0.0, discount_prices_sum = 0.0;
+    double sum, prices_sum = 0.0, discount_prices_sum = 0.0;
     int i, insert_index;
 
     if (argc >= 2) {
