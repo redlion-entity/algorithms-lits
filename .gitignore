@@ -1,2 +1,7 @@
+.idea/
+CMakeLists.txt
+cmake-build-debug/
+inputData/
 /*.log
 .vagrant
+*.out
