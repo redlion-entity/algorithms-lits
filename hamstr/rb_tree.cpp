@@ -1,443 +1,505 @@
-#include<iostream>
+#include <iostream>
+#include <cassert>
 #include "rb_tree.h"
 
-using namespace std;
-
-void RBtree::insert()
+/*
+ * Return Grandparent of Node
+ */
+node RBTree::grandparent(node n)
 {
-    int z,i=0;
-    cout<<"\nEnter key of the node to be inserted: ";
-    cin>>z;
-    node *p,*q;
-    node *t=new node;
-    t->key=z;
-    t->left=NULL;
-    t->right=NULL;
-    t->color='r';
-    p=root;
-    q=NULL;
-    if(root==NULL)
-    {
-        root=t;
-        t->parent=NULL;
-    }
-    else
-    {
-        while(p!=NULL)
-        {
-            q=p;
-            if(p->key<t->key)
-                p=p->right;
-            else
-                p=p->left;
-        }
-        t->parent=q;
-        if(q->key<t->key)
-            q->right=t;
-        else
-            q->left=t;
-    }
-    insertfix(t);
+    assert (n != NULL);
+    assert (n->parent != NULL);
+    assert (n->parent->parent != NULL);
+    return n->parent->parent;
 }
-void RBtree::insertfix(node *t)
+
+/*
+ * Return Sibling of Node
+ */
+node RBTree::sibling(node n)
 {
-    node *u;
-    if(root==t)
+    assert (n != NULL);
+    assert (n->parent != NULL);
+    if (n == n->parent->left)
+        return n->parent->right;
+    else
+        return n->parent->left;
+}
+
+/*
+ * Return Uncle of Node
+ */
+node RBTree::uncle(node n)
+{
+    assert (n != NULL);
+    assert (n->parent != NULL);
+    assert (n->parent->parent != NULL);
+    return sibling(n->parent);
+}
+
+/*
+ * Verifying Properties of Red black Tree
+ */
+void RBTree::verify_properties(rbtree t)
+{
+    verify_property_1 (t->root);
+    verify_property_2 (t->root);
+    verify_property_4 (t->root);
+    verify_property_5 (t->root);
+}
+/*
+ * Verifying Property 1
+ */
+void RBTree::verify_property_1(node n)
+{
+    assert (node_color(n) == RED || node_color(n) == BLACK);
+    if (n == NULL)
+        return;
+    verify_property_1(n->left);
+    verify_property_1(n->right);
+}
+/*
+ * Verifying Property 2
+ */
+void RBTree::verify_property_2(node root)
+{
+    assert (node_color(root) == BLACK);
+}
+/*
+ * Returns color of a node
+ */
+color RBTree::node_color(node n)
+{
+    return n == NULL ? BLACK : n->color;
+}
+/*
+ * Verifying Property 4
+ */
+void RBTree::verify_property_4(node n)
+{
+    if (node_color(n) == RED)
     {
-        t->color='b';
+        assert (node_color(n->left) == BLACK);
+        assert (node_color(n->right) == BLACK);
+        assert (node_color(n->parent) == BLACK);
+    }
+    if (n == NULL)
+        return;
+    verify_property_4(n->left);
+    verify_property_4(n->right);
+}
+/*
+ * Verifying Property 5
+ */
+void RBTree::verify_property_5(node root)
+{
+    int black_count_path = -1;
+    verify_property_5_helper(root, 0, &black_count_path);
+}
+
+void RBTree::verify_property_5_helper(node n, int black_count, int* path_black_count)
+{
+    if (node_color(n) == BLACK)
+    {
+        black_count++;
+    }
+    if (n == NULL)
+    {
+        if (*path_black_count == -1)
+        {
+            *path_black_count = black_count;
+        }
+        else
+        {
+            assert (black_count == *path_black_count);
+        }
         return;
     }
-    while(t->parent!=NULL&&t->parent->color=='r')
+    verify_property_5_helper(n->left,  black_count, path_black_count);
+    verify_property_5_helper(n->right, black_count, path_black_count);
+}
+
+/*
+ * Create Red Black Tree
+ */
+rbtree RBTree::rbtree_create()
+{
+    rbtree t = new rbtree_t;
+    t->root = NULL;
+    verify_properties(t);
+    return t;
+}
+
+/*
+ * Creating New Node of Reb Black Tree
+ */
+node RBTree::new_node(void* k, void* v, color n_color, node left, node right)
+{
+    node result = new rbtree_node;
+    result->key = k;
+    result->value = v;
+    result->color = n_color;
+    result->left = left;
+    result->right = right;
+    if (left  != NULL)
+        left->parent = result;
+    if (right != NULL)
+        right->parent = result;
+    result->parent = NULL;
+    return result;
+}
+/*
+ * Look Up through Node
+ */
+node RBTree::lookup_node(rbtree t, void* key, compare_func compare)
+{
+    node n = t->root;
+    while (n != NULL)
     {
-        node *g=t->parent->parent;
-        if(g->left==t->parent)
+        int comp_result = compare(key, n->key);
+        if (comp_result == 0)
         {
-            if(g->right!=NULL)
-            {
-                u=g->right;
-                if(u->color=='r')
-                {
-                    t->parent->color='b';
-                    u->color='b';
-                    g->color='r';
-                    t=g;
-                }
-            }
-            else
-            {
-                if(t->parent->right==t)
-                {
-                    t=t->parent;
-                    leftrotate(t);
-                }
-                t->parent->color='b';
-                g->color='r';
-                rightrotate(g);
-            }
+            return n;
+        }
+        else if (comp_result < 0)
+        {
+            n = n->left;
         }
         else
         {
-            if(g->left!=NULL)
-            {
-                u=g->left;
-                if(u->color=='r')
-                {
-                    t->parent->color='b';
-                    u->color='b';
-                    g->color='r';
-                    t=g;
-                }
-            }
-            else
-            {
-                if(t->parent->left==t)
-                {
-                    t=t->parent;
-                    rightrotate(t);
-                }
-                t->parent->color='b';
-                g->color='r';
-                leftrotate(g);
-            }
+            assert(comp_result > 0);
+            n = n->right;
         }
-        root->color='b';
     }
+    return n;
+}
+/*
+ * RbTree Look Up
+ */
+void* RBTree::rbtree_lookup(rbtree t, void* key, compare_func compare)
+{
+    node n = lookup_node(t, key, compare);
+    return n == NULL ? NULL : n->value;
 }
 
-void RBtree::del()
+/*
+ * Rotate left
+ */
+void RBTree::rotate_left(rbtree t, node n)
 {
-    if(root==NULL)
+    node r = n->right;
+    replace_node(t, n, r);
+    n->right = r->left;
+    if (r->left != NULL)
     {
-        cout<<"\nEmpty Tree." ;
-        return ;
+        r->left->parent = n;
     }
-    int x;
-    cout<<"\nEnter the key of the node to be deleted: ";
-    cin>>x;
-    node *p;
-    p=root;
-    node *y=NULL;
-    node *q=NULL;
-    int found=0;
-    while(p!=NULL&&found==0)
+    r->left = n;
+    n->parent = r;
+}
+/*
+ * Rotate right
+ */
+void RBTree::rotate_right(rbtree t, node n)
+{
+    node L = n->left;
+    replace_node(t, n, L);
+    n->left = L->right;
+    if (L->right != NULL)
     {
-        if(p->key==x)
-            found=1;
-        if(found==0)
-        {
-            if(p->key<x)
-                p=p->right;
-            else
-                p=p->left;
-        }
+        L->right->parent = n;
     }
-    if(found==0)
+    L->right = n;
+    n->parent = L;
+}
+/*
+ * Replace a node
+ */
+void RBTree::replace_node(rbtree t, node oldn, node newn)
+{
+    if (oldn->parent == NULL)
     {
-        cout<<"\nElement Not Found.";
-        return ;
+        t->root = newn;
     }
     else
     {
-        cout<<"\nDeleted Element: "<<p->key;
-        cout<<"\nColour: ";
-        if(p->color=='b')
-            cout<<"Black\n";
+        if (oldn == oldn->parent->left)
+            oldn->parent->left = newn;
         else
-            cout<<"Red\n";
-
-        if(p->parent!=NULL)
-            cout<<"\nParent: "<<p->parent->key;
-        else
-            cout<<"\nThere is no parent of the node.  ";
-        if(p->right!=NULL)
-            cout<<"\nRight Child: "<<p->right->key;
-        else
-            cout<<"\nThere is no right child of the node.  ";
-        if(p->left!=NULL)
-            cout<<"\nLeft Child: "<<p->left->key;
-        else
-            cout<<"\nThere is no left child of the node.  ";
-        cout<<"\nNode Deleted.";
-        if(p->left==NULL||p->right==NULL)
-            y=p;
-        else
-            y=successor(p);
-        if(y->left!=NULL)
-            q=y->left;
-        else
-        {
-            if(y->right!=NULL)
-                q=y->right;
-            else
-                q=NULL;
-        }
-        if(q!=NULL)
-            q->parent=y->parent;
-        if(y->parent==NULL)
-            root=q;
-        else
-        {
-            if(y==y->parent->left)
-                y->parent->left=q;
-            else
-                y->parent->right=q;
-        }
-        if(y!=p)
-        {
-            p->color=y->color;
-            p->key=y->key;
-        }
-        if(y->color=='b')
-            delfix(q);
+            oldn->parent->right = newn;
+    }
+    if (newn != NULL)
+    {
+        newn->parent = oldn->parent;
     }
 }
-
-void RBtree::delfix(node *p)
+/*
+ * Insert node into RBTree
+ */
+void RBTree::rbtree_insert(rbtree t, void* key, void* value, compare_func compare)
 {
-    node *s;
-    while(p!=root&&p->color=='b')
+    node inserted_node = new_node(key, value, RED, NULL, NULL);
+    if (t->root == NULL)
     {
-        if(p->parent->left==p)
+        t->root = inserted_node;
+    }
+    else
+    {
+        node n = t->root;
+        while (1)
         {
-            s=p->parent->right;
-            if(s->color=='r')
+            int comp_result = compare(key, n->key);
+            if (comp_result == 0)
             {
-                s->color='b';
-                p->parent->color='r';
-                leftrotate(p->parent);
-                s=p->parent->right;
+                n->value = value;
+                return;
             }
-            if(s->right->color=='b'&&s->left->color=='b')
+            else if (comp_result < 0)
             {
-                s->color='r';
-                p=p->parent;
-            }
-            else
-            {
-                if(s->right->color=='b')
+                if (n->left == NULL)
                 {
-                    s->left->color=='b';
-                    s->color='r';
-                    rightrotate(s);
-                    s=p->parent->right;
+                    n->left = inserted_node;
+                    break;
                 }
-                s->color=p->parent->color;
-                p->parent->color='b';
-                s->right->color='b';
-                leftrotate(p->parent);
-                p=root;
-            }
-        }
-        else
-        {
-            s=p->parent->left;
-            if(s->color=='r')
-            {
-                s->color='b';
-                p->parent->color='r';
-                rightrotate(p->parent);
-                s=p->parent->left;
-            }
-            if(s->left->color=='b'&&s->right->color=='b')
-            {
-                s->color='r';
-                p=p->parent;
-            }
-            else
-            {
-                if(s->left->color=='b')
+                else
                 {
-                    s->right->color='b';
-                    s->color='r';
-                    leftrotate(s);
-                    s=p->parent->left;
+                    n = n->left;
                 }
-                s->color=p->parent->color;
-                p->parent->color='b';
-                s->left->color='b';
-                rightrotate(p->parent);
-                p=root;
+            }
+            else
+            {
+                assert (comp_result > 0);
+                if (n->right == NULL)
+                {
+                    n->right = inserted_node;
+                    break;
+                }
+                else
+                {
+                    n = n->right;
+                }
             }
         }
-        p->color='b';
-        root->color='b';
+        inserted_node->parent = n;
     }
+    insert_case1(t, inserted_node);
+    verify_properties(t);
 }
 
-void RBtree::leftrotate(node *p)
+/*
+ * Inserting Case 1
+ */
+void RBTree::insert_case1(rbtree t, node n)
 {
-    if(p->right==NULL)
-        return ;
+    if (n->parent == NULL)
+        n->color = BLACK;
     else
-    {
-        node *y=p->right;
-        if(y->left!=NULL)
-        {
-            p->right=y->left;
-            y->left->parent=p;
-        }
-        else
-            p->right=NULL;
-        if(p->parent!=NULL)
-            y->parent=p->parent;
-        if(p->parent==NULL)
-            root=y;
-        else
-        {
-            if(p==p->parent->left)
-                p->parent->left=y;
-            else
-                p->parent->right=y;
-        }
-        y->left=p;
-        p->parent=y;
-    }
-}
-void RBtree::rightrotate(node *p)
-{
-    if(p->left==NULL)
-        return ;
-    else
-    {
-        node *y=p->left;
-        if(y->right!=NULL)
-        {
-            p->left=y->right;
-            y->right->parent=p;
-        }
-        else
-            p->left=NULL;
-        if(p->parent!=NULL)
-            y->parent=p->parent;
-        if(p->parent==NULL)
-            root=y;
-        else
-        {
-            if(p==p->parent->left)
-                p->parent->left=y;
-            else
-                p->parent->right=y;
-        }
-        y->right=p;
-        p->parent=y;
-    }
+        insert_case2(t, n);
 }
 
-node* RBtree::successor(node *p)
+/*
+ * Inserting Case 2
+ */
+void RBTree::insert_case2(rbtree t, node n)
 {
-    node *y=NULL;
-    if(p->left!=NULL)
+    if (node_color(n->parent) == BLACK)
+        return;
+    else
+        insert_case3(t, n);
+}
+
+/*
+ * Inserting Case 3
+ */
+void RBTree::insert_case3(rbtree t, node n)
+{
+    if (node_color(uncle(n)) == RED)
     {
-        y=p->left;
-        while(y->right!=NULL)
-            y=y->right;
+        n->parent->color = BLACK;
+        uncle(n)->color = BLACK;
+        grandparent(n)->color = RED;
+        insert_case1(t, grandparent(n));
     }
     else
     {
-        y=p->right;
-        while(y->left!=NULL)
-            y=y->left;
+        insert_case4(t, n);
     }
-    return y;
 }
 
-void RBtree::disp()
+/*
+ * Inserting Case 4
+ */
+void RBTree::insert_case4(rbtree t, node n)
 {
-    display(root);
+    if (n == n->parent->right && n->parent == grandparent(n)->left)
+    {
+        rotate_left(t, n->parent);
+        n = n->left;
+    }
+    else if (n == n->parent->left && n->parent == grandparent(n)->right)
+    {
+        rotate_right(t, n->parent);
+        n = n->right;
+    }
+    insert_case5(t, n);
 }
-void RBtree::display(node *p)
+
+/*
+ * Inserting Case 5
+ */
+void RBTree::insert_case5(rbtree t, node n)
 {
-    if(root==NULL)
+    n->parent->color = BLACK;
+    grandparent(n)->color = RED;
+    if (n == n->parent->left && n->parent == grandparent(n)->left)
     {
-        cout<<"\nEmpty Tree.";
-        return ;
+        rotate_right(t, grandparent(n));
     }
-    if(p!=NULL)
-    {
-        cout<<"\n\t NODE: ";
-        cout<<"\n Key: "<<p->key;
-        cout<<"\n Colour: ";
-        if(p->color=='b')
-            cout<<"Black";
-        else
-            cout<<"Red";
-        if(p->parent!=NULL)
-            cout<<"\n Parent: "<<p->parent->key;
-        else
-            cout<<"\n There is no parent of the node.  ";
-        if(p->right!=NULL)
-            cout<<"\n Right Child: "<<p->right->key;
-        else
-            cout<<"\n There is no right child of the node.  ";
-        if(p->left!=NULL)
-            cout<<"\n Left Child: "<<p->left->key;
-        else
-            cout<<"\n There is no left child of the node.  ";
-        cout<<endl;
-        if(p->left)
-        {
-            cout<<"\n\nLeft:\n";
-            display(p->left);
-        }
-        /*else
-         cout<<"\nNo Left Child.\n";*/
-        if(p->right)
-        {
-            cout<<"\n\nRight:\n";
-            display(p->right);
-        }
-        /*else
-         cout<<"\nNo Right Child.\n"*/
-    }
-}
-void RBtree::search()
-{
-    if(root==NULL)
-    {
-        cout<<"\nEmpty Tree\n" ;
-        return  ;
-    }
-    int x;
-    cout<<"\n Enter key of the node to be searched: ";
-    cin>>x;
-    node *p=root;
-    int found=0;
-    while(p!=NULL&& found==0)
-    {
-        if(p->key==x)
-            found=1;
-        if(found==0)
-        {
-            if(p->key<x)
-                p=p->right;
-            else
-                p=p->left;
-        }
-    }
-    if(found==0)
-        cout<<"\nElement Not Found.";
     else
     {
-        cout<<"\n\t FOUND NODE: ";
-        cout<<"\n Key: "<<p->key;
-        cout<<"\n Colour: ";
-        if(p->color=='b')
-            cout<<"Black";
-        else
-            cout<<"Red";
-        if(p->parent!=NULL)
-            cout<<"\n Parent: "<<p->parent->key;
-        else
-            cout<<"\n There is no parent of the node.  ";
-        if(p->right!=NULL)
-            cout<<"\n Right Child: "<<p->right->key;
-        else
-            cout<<"\n There is no right child of the node.  ";
-        if(p->left!=NULL)
-            cout<<"\n Left Child: "<<p->left->key;
-        else
-            cout<<"\n There is no left child of the node.  ";
-        cout<<endl;
+        assert (n == n->parent->right && n->parent == grandparent(n)->right);
+        rotate_left(t, grandparent(n));
+    }
+}
 
+/*
+ * Delete Node from RBTree
+ */
+void RBTree::rbtree_delete(rbtree t, void* key, compare_func compare)
+{
+    node child;
+    node n = lookup_node(t, key, compare);
+    if (n == NULL)
+        return;
+    if (n->left != NULL && n->right != NULL)
+    {
+        node pred = maximum_node(n->left);
+        n->key   = pred->key;
+        n->value = pred->value;
+        n = pred;
+    }
+    assert(n->left == NULL || n->right == NULL);
+    child = n->right == NULL ? n->left  : n->right;
+    if (node_color(n) == BLACK)
+    {
+        n->color = node_color(child);
+        delete_case1(t, n);
+    }
+    replace_node(t, n, child);
+    free(n);
+    verify_properties(t);
+}
+
+/*
+ * Returns Maximum node
+ */
+node RBTree::maximum_node(node n)
+{
+    assert (n != NULL);
+    while (n->right != NULL)
+    {
+        n = n->right;
+    }
+    return n;
+}
+
+/*
+ * Deleting Case 1
+ */
+void RBTree::delete_case1(rbtree t, node n)
+{
+    if (n->parent == NULL)
+        return;
+    else
+        delete_case2(t, n);
+}
+
+/*
+ * Deleting Case 2
+ */
+void RBTree::delete_case2(rbtree t, node n)
+{
+    if (node_color(sibling(n)) == RED)
+    {
+        n->parent->color = RED;
+        sibling(n)->color = BLACK;
+        if (n == n->parent->left)
+            rotate_left(t, n->parent);
+        else
+            rotate_right(t, n->parent);
+    }
+    delete_case3(t, n);
+}
+
+/*
+ * Deleting Case 3
+ */
+void RBTree::delete_case3(rbtree t, node n)
+{
+    if (node_color(n->parent) == BLACK && node_color(sibling(n)) == BLACK &&
+        node_color(sibling(n)->left) == BLACK && node_color(sibling(n)->right) == BLACK)
+    {
+        sibling(n)->color = RED;
+        delete_case1(t, n->parent);
+    }
+    else
+        delete_case4(t, n);
+}
+
+/*
+ * Deleting Case 4
+ */
+void RBTree::delete_case4(rbtree t, node n)
+{
+    if (node_color(n->parent) == RED && node_color(sibling(n)) == BLACK &&
+        node_color(sibling(n)->left) == BLACK && node_color(sibling(n)->right) == BLACK)
+    {
+        sibling(n)->color = RED;
+        n->parent->color = BLACK;
+    }
+    else
+        delete_case5(t, n);
+}
+
+/*
+ * Deleting Case 5
+ */
+void RBTree::delete_case5(rbtree t, node n)
+{
+    if (n == n->parent->left && node_color(sibling(n)) == BLACK &&
+        node_color(sibling(n)->left) == RED && node_color(sibling(n)->right) == BLACK)
+    {
+        sibling(n)->color = RED;
+        sibling(n)->left->color = BLACK;
+        rotate_right(t, sibling(n));
+    }
+    else if (n == n->parent->right && node_color(sibling(n)) == BLACK &&
+             node_color(sibling(n)->right) == RED && node_color(sibling(n)->left) == BLACK)
+    {
+        sibling(n)->color = RED;
+        sibling(n)->right->color = BLACK;
+        rotate_left(t, sibling(n));
+    }
+    delete_case6(t, n);
+}
+
+/*
+ * Deleting Case 6
+ */
+void RBTree::delete_case6(rbtree t, node n)
+{
+    sibling(n)->color = node_color(n->parent);
+    n->parent->color = BLACK;
+    if (n == n->parent->left)
+    {
+        assert (node_color(sibling(n)->right) == RED);
+        sibling(n)->right->color = BLACK;
+        rotate_left(t, n->parent);
+    }
+    else
+    {
+        assert (node_color(sibling(n)->left) == RED);
+        sibling(n)->left->color = BLACK;
+        rotate_right(t, n->parent);
     }
 }

@@ -1,576 +1,156 @@
-/* 24.12.2008 last modification: 26.06.2013
-Copyright (c) 2008-2013 by Siegfried Koepf
-
-This file is distributed under the terms of the GNU General Public License
-version 3 as published by the Free Software Foundation.
-For information on usage and redistribution and for a disclaimer of all
-warranties, see the file COPYING in this distribution.
-
-testing
-gen_comb_norep_lex_init() and gen_comb_norep_lex_next()
-
-compile
-gcc -o comb_norep_lex_example comb_norep_lex_example.c comb_norep_lex.c
-*/
-
-/*#include <stdio.h>
+#include <iostream>
+#include <cassert>
+#include <stdio.h>
 #include <stdlib.h>
-#include "_generate.h"
+#include "rb_tree.h"
 
-int main(void)
+//using namespace std;
+
+/*
+ * Compare two nodes
+ */
+/*int compare_int(void* leftp, void* rightp)
 {
-    unsigned char n           = 7;    //length of alphabet
-    unsigned char k           = 4;    //length of figures
-    unsigned char *vector     = NULL; //where the current figure is stored
-    int           gen_result;         //return value of generation functions
-    unsigned int  set_counter;        //counting generated sequences
-    int           x;                  //iterator
-
-//alloc memory for vector
-    vector = (unsigned char *)malloc(sizeof(unsigned char) * k);
-    if(vector == NULL)
+    int left = (long)leftp;
+    int right = (long)rightp;
+    if (left < right)
+        return -1;
+    else if (left > right)
+        return 1;
+    else
     {
-        fprintf(stderr, "error: insufficient memory\n");
-        exit(EXIT_FAILURE);
+        assert (left == right);
+        return 0;
     }
-
-    set_counter = 0;
-    printf("comb_norep_lex(%u, %u)\n", n, k);
-
-//initialize
-    gen_result = gen_comb_norep_lex_init(vector, n, k);
-
-    if(gen_result == GEN_ERROR)
+}*/
+/*
+ * Print RBTRee
+ */
+/*void print_tree_helper(node n, int indent)
+{
+    int i;
+    if (n == NULL)
     {
-        fprintf(stderr, "error: couldn't initialize\n");
-        return(EXIT_FAILURE);
+        fputs("<empty tree>", stdout);
+        return;
     }
-
-    if(gen_result == GEN_EMPTY)
+    if (n->right != NULL)
     {
-        set_counter++;
-        printf("{} (%u)\n", set_counter);
+        print_tree_helper(n->right, indent + INDENT_STEP);
     }
-
-//generate all successors
-    while(gen_result == GEN_NEXT)
+    for(i = 0; i < indent; i++)
+        fputs(" ", stdout);
+    if (n->color == BLACK)
+        cout<<(long)n->key<<endl;
+    else
+        cout<<"<"<<(long)n->key<<">"<<endl;
+    if (n->left != NULL)
     {
-        set_counter++;
-
-        for(x = 0; x < k; x++)
-            printf("%u ", vector[x]);
-
-        printf("(%u)\n", set_counter);
-
-        gen_result = gen_comb_norep_lex_next(vector, n, k);
+        print_tree_helper(n->left, indent + INDENT_STEP);
     }
+}*/
 
-    return(EXIT_SUCCESS);
+/*void print_tree(rbtree t)
+{
+    print_tree_helper(t->root, 0);
+    puts("");
+}*/
+
+/*
+ * Main Contains Menu
+ */
+/*
+int main()
+{
+    int i;
+    RBTree rbt;
+    rbtree t = rbt.rbtree_create();
+    for (i = 0; i < 12; i++)
+    {
+        int x = rand() % 10;
+        int y = rand() % 10;
+        print_tree(t);
+        cout<<"Inserting "<<x<<" -> "<<y<<endl<<endl;
+        rbt.rbtree_insert(t, (void*)x, (void*)y, compare_int);
+        assert(rbt.rbtree_lookup(t, (void*)x, compare_int) == (void*)y);
+    }
+    for (i = 0; i < 15; i++)
+    {
+        int x = rand() % 10;
+        print_tree(t);
+        cout<<"Deleting key "<<x<<endl<<endl;
+        rbt.rbtree_delete(t, (void*)x, compare_int);
+    }
+    return 0;
 }*/
 
 
-#include<iostream>
+int main(int argc, char *argv[]) {
+    char *input_file, *output_file;
+    FILE *fp = NULL;
+    unsigned int food_limit, norm, greed;
+    int hamsters_quantity;
+    unsigned int **hamster_norm = NULL;
+    unsigned int **hamster_greed = NULL;
+    int i = 0;
 
-using namespace std;
+    if (argc >= 2) {
+        input_file = argv[1];
+    } else {
+        input_file = "/Users/red_lion/Documents/Projects/GitHub/algorithms-lits/hamstr/inputData/01.in";
+        //input_file = "lngpok.in";
+    }
 
-struct node
-{
-    int key;
-    node *parent;
-    char color;
-    node *left;
-    node *right;
-};
-class RBtree
-{
-    node *root;
-    node *q;
-public :
-    RBtree()
-    {
-        q=NULL;
-        root=NULL;
+    if (argc >= 3) {
+        output_file = argv[2];
+    } else {
+        output_file = "/Users/red_lion/Documents/Projects/GitHub/algorithms-lits/hamstr/hamstr.out";
+        //output_file = "lngpok.out";
     }
-    void insert();
-    void insertfix(node *);
-    void leftrotate(node *);
-    void rightrotate(node *);
-    void del();
-    node* successor(node *);
-    void delfix(node *);
-    void disp();
-    void display( node *);
-    void search();
-};
-void RBtree::insert()
-{
-    int z,i=0;
-    cout<<"\nEnter key of the node to be inserted: ";
-    cin>>z;
-    node *p,*q;
-    node *t=new node;
-    t->key=z;
-    t->left=NULL;
-    t->right=NULL;
-    t->color='r';
-    p=root;
-    q=NULL;
-    if(root==NULL)
-    {
-        root=t;
-        t->parent=NULL;
-    }
-    else
-    {
-        while(p!=NULL)
-        {
-            q=p;
-            if(p->key<t->key)
-                p=p->right;
-            else
-                p=p->left;
-        }
-        t->parent=q;
-        if(q->key<t->key)
-            q->right=t;
-        else
-            q->left=t;
-    }
-    insertfix(t);
-}
-void RBtree::insertfix(node *t)
-{
-    node *u;
-    if(root==t)
-    {
-        t->color='b';
-        return;
-    }
-    while(t->parent!=NULL&&t->parent->color=='r')
-    {
-        node *g=t->parent->parent;
-        if(g->left==t->parent)
-        {
-            if(g->right!=NULL)
-            {
-                u=g->right;
-                if(u->color=='r')
-                {
-                    t->parent->color='b';
-                    u->color='b';
-                    g->color='r';
-                    t=g;
-                }
-            }
-            else
-            {
-                if(t->parent->right==t)
-                {
-                    t=t->parent;
-                    leftrotate(t);
-                }
-                t->parent->color='b';
-                g->color='r';
-                rightrotate(g);
-            }
-        }
-        else
-        {
-            if(g->left!=NULL)
-            {
-                u=g->left;
-                if(u->color=='r')
-                {
-                    t->parent->color='b';
-                    u->color='b';
-                    g->color='r';
-                    t=g;
-                }
-            }
-            else
-            {
-                if(t->parent->left==t)
-                {
-                    t=t->parent;
-                    rightrotate(t);
-                }
-                t->parent->color='b';
-                g->color='r';
-                leftrotate(g);
-            }
-        }
-        root->color='b';
-    }
-}
 
-void RBtree::del()
-{
-    if(root==NULL)
-    {
-        cout<<"\nEmpty Tree." ;
-        return ;
+    // read data from file
+    fp = fopen(input_file, "r");
+    if (fp == NULL) {
+        return EXIT_FAILURE;
     }
-    int x;
-    cout<<"\nEnter the key of the node to be deleted: ";
-    cin>>x;
-    node *p;
-    p=root;
-    node *y=NULL;
-    node *q=NULL;
-    int found=0;
-    while(p!=NULL&&found==0)
-    {
-        if(p->key==x)
-            found=1;
-        if(found==0)
-        {
-            if(p->key<x)
-                p=p->right;
-            else
-                p=p->left;
-        }
-    }
-    if(found==0)
-    {
-        cout<<"\nElement Not Found.";
-        return ;
-    }
-    else
-    {
-        cout<<"\nDeleted Element: "<<p->key;
-        cout<<"\nColour: ";
-        if(p->color=='b')
-            cout<<"Black\n";
-        else
-            cout<<"Red\n";
 
-        if(p->parent!=NULL)
-            cout<<"\nParent: "<<p->parent->key;
-        else
-            cout<<"\nThere is no parent of the node.  ";
-        if(p->right!=NULL)
-            cout<<"\nRight Child: "<<p->right->key;
-        else
-            cout<<"\nThere is no right child of the node.  ";
-        if(p->left!=NULL)
-            cout<<"\nLeft Child: "<<p->left->key;
-        else
-            cout<<"\nThere is no left child of the node.  ";
-        cout<<"\nNode Deleted.";
-        if(p->left==NULL||p->right==NULL)
-            y=p;
-        else
-            y=successor(p);
-        if(y->left!=NULL)
-            q=y->left;
-        else
-        {
-            if(y->right!=NULL)
-                q=y->right;
-            else
-                q=NULL;
-        }
-        if(q!=NULL)
-            q->parent=y->parent;
-        if(y->parent==NULL)
-            root=q;
-        else
-        {
-            if(y==y->parent->left)
-                y->parent->left=q;
-            else
-                y->parent->right=q;
-        }
-        if(y!=p)
-        {
-            p->color=y->color;
-            p->key=y->key;
-        }
-        if(y->color=='b')
-            delfix(q);
-    }
-}
+    fscanf(fp, "%d", &food_limit);
+    fscanf(fp, "%d", &hamsters_quantity);
 
-void RBtree::delfix(node *p)
-{
-    node *s;
-    while(p!=root&&p->color=='b')
-    {
-        if(p->parent->left==p)
-        {
-            s=p->parent->right;
-            if(s->color=='r')
-            {
-                s->color='b';
-                p->parent->color='r';
-                leftrotate(p->parent);
-                s=p->parent->right;
-            }
-            if(s->right->color=='b'&&s->left->color=='b')
-            {
-                s->color='r';
-                p=p->parent;
-            }
-            else
-            {
-                if(s->right->color=='b')
-                {
-                    s->left->color=='b';
-                    s->color='r';
-                    rightrotate(s);
-                    s=p->parent->right;
-                }
-                s->color=p->parent->color;
-                p->parent->color='b';
-                s->right->color='b';
-                leftrotate(p->parent);
-                p=root;
-            }
-        }
-        else
-        {
-            s=p->parent->left;
-            if(s->color=='r')
-            {
-                s->color='b';
-                p->parent->color='r';
-                rightrotate(p->parent);
-                s=p->parent->left;
-            }
-            if(s->left->color=='b'&&s->right->color=='b')
-            {
-                s->color='r';
-                p=p->parent;
-            }
-            else
-            {
-                if(s->left->color=='b')
-                {
-                    s->right->color='b';
-                    s->color='r';
-                    leftrotate(s);
-                    s=p->parent->left;
-                }
-                s->color=p->parent->color;
-                p->parent->color='b';
-                s->left->color='b';
-                rightrotate(p->parent);
-                p=root;
-            }
-        }
-        p->color='b';
-        root->color='b';
-    }
-}
+    hamster_norm = new unsigned int*[hamsters_quantity];
+    hamster_greed = new unsigned int*[hamsters_quantity];
 
-void RBtree::leftrotate(node *p)
-{
-    if(p->right==NULL)
-        return ;
-    else
-    {
-        node *y=p->right;
-        if(y->left!=NULL)
-        {
-            p->right=y->left;
-            y->left->parent=p;
-        }
-        else
-            p->right=NULL;
-        if(p->parent!=NULL)
-            y->parent=p->parent;
-        if(p->parent==NULL)
-            root=y;
-        else
-        {
-            if(p==p->parent->left)
-                p->parent->left=y;
-            else
-                p->parent->right=y;
-        }
-        y->left=p;
-        p->parent=y;
+    while(fscanf(fp, "%u %u", &hamster_norm[i], &hamster_greed[i]) == 2) {
+        i++;
     }
-}
-void RBtree::rightrotate(node *p)
-{
-    if(p->left==NULL)
-        return ;
-    else
-    {
-        node *y=p->left;
-        if(y->right!=NULL)
-        {
-            p->left=y->right;
-            y->right->parent=p;
-        }
-        else
-            p->left=NULL;
-        if(p->parent!=NULL)
-            y->parent=p->parent;
-        if(p->parent==NULL)
-            root=y;
-        else
-        {
-            if(p==p->parent->left)
-                p->parent->left=y;
-            else
-                p->parent->right=y;
-        }
-        y->right=p;
-        p->parent=y;
-    }
-}
+    fclose(fp);
 
-node* RBtree::successor(node *p)
-{
-    node *y=NULL;
-    if(p->left!=NULL)
-    {
-        y=p->left;
-        while(y->right!=NULL)
-            y=y->right;
-    }
-    else
-    {
-        y=p->right;
-        while(y->left!=NULL)
-            y=y->left;
-    }
-    return y;
-}
 
-void RBtree::disp()
-{
-    display(root);
-}
-void RBtree::display(node *p)
-{
-    if(root==NULL)
-    {
-        cout<<"\nEmpty Tree.";
-        return ;
-    }
-    if(p!=NULL)
-    {
-        cout<<"\n\t NODE: ";
-        cout<<"\n Key: "<<p->key;
-        cout<<"\n Colour: ";
-        if(p->color=='b')
-            cout<<"Black";
-        else
-            cout<<"Red";
-        if(p->parent!=NULL)
-            cout<<"\n Parent: "<<p->parent->key;
-        else
-            cout<<"\n There is no parent of the node.  ";
-        if(p->right!=NULL)
-            cout<<"\n Right Child: "<<p->right->key;
-        else
-            cout<<"\n There is no right child of the node.  ";
-        if(p->left!=NULL)
-            cout<<"\n Left Child: "<<p->left->key;
-        else
-            cout<<"\n There is no left child of the node.  ";
-        cout<<endl;
-        if(p->left)
-        {
-            cout<<"\n\nLeft:\n";
-            display(p->left);
-        }
-        /*else
-         cout<<"\nNo Left Child.\n";*/
-        if(p->right)
-        {
-            cout<<"\n\nRight:\n";
-            display(p->right);
-        }
-        /*else
-         cout<<"\nNo Right Child.\n"*/
-    }
-}
-void RBtree::search()
-{
-    if(root==NULL)
-    {
-        cout<<"\nEmpty Tree\n" ;
-        return  ;
-    }
-    int x;
-    cout<<"\n Enter key of the node to be searched: ";
-    cin>>x;
-    node *p=root;
-    int found=0;
-    while(p!=NULL&& found==0)
-    {
-        if(p->key==x)
-            found=1;
-        if(found==0)
-        {
-            if(p->key<x)
-                p=p->right;
-            else
-                p=p->left;
-        }
-    }
-    if(found==0)
-        cout<<"\nElement Not Found.";
-    else
-    {
-        cout<<"\n\t FOUND NODE: ";
-        cout<<"\n Key: "<<p->key;
-        cout<<"\n Colour: ";
-        if(p->color=='b')
-            cout<<"Black";
-        else
-            cout<<"Red";
-        if(p->parent!=NULL)
-            cout<<"\n Parent: "<<p->parent->key;
-        else
-            cout<<"\n There is no parent of the node.  ";
-        if(p->right!=NULL)
-            cout<<"\n Right Child: "<<p->right->key;
-        else
-            cout<<"\n There is no right child of the node.  ";
-        if(p->left!=NULL)
-            cout<<"\n Left Child: "<<p->left->key;
-        else
-            cout<<"\n There is no left child of the node.  ";
-        cout<<endl;
 
-    }
-}
-int main()
-{
-    int ch,y=0;
-    RBtree obj;
-    do
-    {
-        cout<<"\n\t RED BLACK TREE " ;
-        cout<<"\n 1. Insert in the tree ";
-        cout<<"\n 2. Delete a node from the tree";
-        cout<<"\n 3. Search for an element in the tree";
-        cout<<"\n 4. Display the tree ";
-        cout<<"\n 5. Exit " ;
-        cout<<"\nEnter Your Choice: ";
-        cin>>ch;
-        switch(ch)
-        {
-            case 1 : obj.insert();
-                cout<<"\nNode Inserted.\n";
-                break;
-            case 2 : obj.del();
-                break;
-            case 3 : obj.search();
-                break;
-            case 4 : obj.disp();
-                break;
-            case 5 : y=1;
-                break;
-            default : cout<<"\nEnter a Valid Choice.";
-        }
-        cout<<endl;
 
-    }while(y!=1);
-    return 1;
+
+    printf("Food limit: %d", food_limit);
+    printf("Hamsters quantity: %d", hamsters_quantity);
+    for (i = 0; i < hamsters_quantity; i++) {
+        printf("%d %d", *hamster_norm[i], *hamster_greed[i]);
+    }
+
+
+
+
+    if (hamster_norm != NULL) {
+        delete [] hamster_norm;
+    }
+    if (hamster_greed != NULL) {
+        delete [] hamster_greed;
+    }
+
+    /*fp = fopen(output_file, "w");
+    if (fp == NULL) {
+        return EXIT_FAILURE;
+    }
+    fprintf(fp, "%d", max_sequence_length);
+    fclose(fp);*/
+
+    return 0;
 }
