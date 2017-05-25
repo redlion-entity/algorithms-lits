@@ -19,8 +19,8 @@ combinatorial generation functions public interfaces
 #define GEN_ERROR 3 //an error occured, print an error message and terminate
 
 //combinatorial generation functions
-int gen_comb_norep_lex_init(unsigned char *vector, const unsigned char n, const unsigned char k);
-int gen_comb_norep_lex_next(unsigned char *vector, const unsigned char n, const unsigned char k);
+int gen_comb_norep_lex_init(int *vector, const int k, const int n);
+int gen_comb_norep_lex_next(int *vector, const int k, const int n);
 
 /*int gen_comb_norep_revcolex_init(unsigned char *vector, const unsigned char n, const unsigned char k);
 int gen_comb_norep_revcolex_next(unsigned char *vector, const unsigned char k);

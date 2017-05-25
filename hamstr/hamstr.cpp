@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "rb_tree.h"
+#include "_generate.h"
 
 //using namespace std;
 
@@ -84,28 +85,63 @@ int main()
     return 0;
 }*/
 
+bool hasHamstersCombination(const int k, const int n, unsigned int* food, const unsigned int food_limit) {
+    int *vector = NULL;
+    int gen_result;
+    bool result = false;
+
+    vector = new int[k];
+
+    // initialize
+    gen_result = gen_comb_norep_lex_init(vector, k, n);
+
+    //generate all successors
+    while (gen_result == GEN_NEXT) {
+        unsigned int sum = 0;
+
+        for (int i = 0; i < k; i++) {
+            sum += food[vector[i]];
+        }
+
+        if (sum <= food_limit) {
+            result = true;
+            break;
+        }
+
+        gen_result = gen_comb_norep_lex_next(vector, k, n);
+    }
+
+    if (vector != NULL) {
+        delete [] vector;
+    }
+
+    return result;
+}
 
 int main(int argc, char *argv[]) {
-    char *input_file, *output_file;
+    char const *input_file, *output_file;
     FILE *fp = NULL;
-    unsigned int food_limit, norm, greed;
-    int hamsters_quantity;
-    unsigned int **hamster_norm = NULL;
-    unsigned int **hamster_greed = NULL;
+    unsigned int food_limit;
+    int hamsters_quantity, left, right, middle, max_hamsters = 0;
+    unsigned int *hamster_norm = NULL;
+    unsigned int *hamster_greed = NULL;
+    unsigned int *hamster_food = NULL;
     int i = 0;
 
     if (argc >= 2) {
         input_file = argv[1];
     } else {
-        input_file = "/Users/red_lion/Documents/Projects/GitHub/algorithms-lits/hamstr/inputData/01.in";
-        //input_file = "lngpok.in";
+        //input_file = "/Users/red_lion/Documents/Projects/GitHub/algorithms-lits/hamstr/inputData/01.in";
+        //input_file = "D:\\Projects\\GitHub\\algorithms-lits\\hamstr\\inputData\\12.in";
+        input_file = "hamstr.in";
     }
 
     if (argc >= 3) {
         output_file = argv[2];
     } else {
-        output_file = "/Users/red_lion/Documents/Projects/GitHub/algorithms-lits/hamstr/hamstr.out";
-        //output_file = "lngpok.out";
+        //output_file = "/Users/red_lion/Documents/Projects/GitHub/algorithms-lits/hamstr/hamstr.out";
+        //output_file = "D:\\Projects\\GitHub\\algorithms-lits\\hamstr\\hamstr.out";
+        output_file = "hamstr.out";
     }
 
     // read data from file
@@ -117,23 +153,48 @@ int main(int argc, char *argv[]) {
     fscanf(fp, "%d", &food_limit);
     fscanf(fp, "%d", &hamsters_quantity);
 
-    hamster_norm = new unsigned int*[hamsters_quantity];
-    hamster_greed = new unsigned int*[hamsters_quantity];
+    hamster_norm = new unsigned int[hamsters_quantity];
+    hamster_greed = new unsigned int[hamsters_quantity];
+    hamster_food = new unsigned int[hamsters_quantity];
 
     while(fscanf(fp, "%u %u", &hamster_norm[i], &hamster_greed[i]) == 2) {
         i++;
     }
     fclose(fp);
 
+    left = 1;
+    right = hamsters_quantity;
+
+    do {
+        middle = (right + left) / 2;
+
+        // calculate thу food for each hamster
+        for (i = 0; i < hamsters_quantity; i++) {
+            hamster_food[i] = hamster_norm[i] + (middle - 1) * hamster_greed[i];
+        }
+
+        if (hasHamstersCombination(middle, hamsters_quantity, hamster_food, food_limit)) {
+            max_hamsters = middle;
+            left = middle;
+        } else {
+            right = middle;
+        }
+
+        if (right - left == 1) {
+            left = right;
+        }
+
+    } while (left < middle || middle < right);
 
 
 
-
-    printf("Food limit: %d", food_limit);
-    printf("Hamsters quantity: %d", hamsters_quantity);
+    /*printf("Food limit: %d\n", food_limit);
+    printf("Hamsters quantity: %d\n", hamsters_quantity);
     for (i = 0; i < hamsters_quantity; i++) {
-        printf("%d %d", *hamster_norm[i], *hamster_greed[i]);
+        printf("%u %u\n", hamster_norm[i], hamster_greed[i]);
     }
+    printf("Hamsters: %d\n", max_hamsters);*/
+
 
 
 
@@ -144,13 +205,16 @@ int main(int argc, char *argv[]) {
     if (hamster_greed != NULL) {
         delete [] hamster_greed;
     }
+    if (hamster_food != NULL) {
+        delete [] hamster_food;
+    }
 
-    /*fp = fopen(output_file, "w");
+    fp = fopen(output_file, "w");
     if (fp == NULL) {
         return EXIT_FAILURE;
     }
-    fprintf(fp, "%d", max_sequence_length);
-    fclose(fp);*/
+    fprintf(fp, "%d", max_hamsters);
+    fclose(fp);
 
     return 0;
 }
