@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "rb_tree.h"
+//#include <vector>
 #include "_generate.h"
 
 //using namespace std;
@@ -85,7 +86,7 @@ int main()
     return 0;
 }*/
 
-bool hasHamstersCombination(const int k, const int n, unsigned int* food, const unsigned int food_limit) {
+/*bool hasHamstersCombination(const int k, const int n, unsigned int* food, const unsigned int food_limit) {
     int *vector = NULL;
     int gen_result;
     bool result = false;
@@ -116,6 +117,44 @@ bool hasHamstersCombination(const int k, const int n, unsigned int* food, const 
     }
 
     return result;
+}*/
+
+int partition(unsigned int* A, const int l, const int r) {
+    if (l!=r)
+        std::swap(A[l + rand() % (r - l)], A[r]);
+    unsigned int x = A[r];
+    int i = l-1;
+    for (int j = l; j <= r; j++) {
+        if (A[j] <= x)
+            std::swap(A[++i],A[j]);
+    }
+    return i;
+}
+
+// Kth order statistic
+unsigned int nth(const int k, unsigned int* A, const int length) {
+    int l = 0, r = length - 1;
+    for(;;) {
+        int pos = partition(A, l, r);
+        if (pos < k)
+            l = pos + 1;
+        else if (pos > k)
+            r = pos - 1;
+        else return A[k];
+    }
+}
+
+unsigned int calculateFood(const int quantity, unsigned int* food, const int length) {
+    unsigned int sum = 0;
+
+    // find Kth oder statistic to divide the array into two parts larger and smaller
+    nth(quantity - 1, food, length);
+
+    for (int i = 0; i < quantity; i++) {
+        sum += food[i];
+    }
+
+    return sum;
 }
 
 int main(int argc, char *argv[]) {
@@ -131,7 +170,7 @@ int main(int argc, char *argv[]) {
     if (argc >= 2) {
         input_file = argv[1];
     } else {
-        //input_file = "/Users/red_lion/Documents/Projects/GitHub/algorithms-lits/hamstr/inputData/01.in";
+        //input_file = "/Users/red_lion/Documents/Projects/GitHub/algorithms-lits/hamstr/inputData/12.in";
         //input_file = "D:\\Projects\\GitHub\\algorithms-lits\\hamstr\\inputData\\12.in";
         input_file = "hamstr.in";
     }
@@ -173,7 +212,8 @@ int main(int argc, char *argv[]) {
             hamster_food[i] = hamster_norm[i] + (middle - 1) * hamster_greed[i];
         }
 
-        if (hasHamstersCombination(middle, hamsters_quantity, hamster_food, food_limit)) {
+        //if (hasHamstersCombination(middle, hamsters_quantity, hamster_food, food_limit)) {
+        if (calculateFood(middle, hamster_food, hamsters_quantity) <= food_limit) {
             max_hamsters = middle;
             left = middle;
         } else {
@@ -190,9 +230,9 @@ int main(int argc, char *argv[]) {
 
     /*printf("Food limit: %d\n", food_limit);
     printf("Hamsters quantity: %d\n", hamsters_quantity);
-    for (i = 0; i < hamsters_quantity; i++) {
-        printf("%u %u\n", hamster_norm[i], hamster_greed[i]);
-    }
+//    for (i = 0; i < hamsters_quantity; i++) {
+//        printf("%u %u\n", hamster_norm[i], hamster_greed[i]);
+//    }
     printf("Hamsters: %d\n", max_hamsters);*/
 
 
