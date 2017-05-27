@@ -119,8 +119,52 @@ int main()
     return result;
 }*/
 
-int partition(unsigned int* A, const int l, const int r) {
-    if (l!=r)
+#define MAX(a, b)   ((a > b) ? a : b)
+#define MIN(a, b)   ((a < b) ? a : b)
+
+int median(unsigned int a, unsigned int b, unsigned int c)
+{
+    unsigned int max;
+    unsigned int min;
+
+    max = MAX(a, MAX(b,c));
+    min = MIN(a, MIN(b,c));
+
+    return (a + b + c) - min - max;
+}
+
+int partition(unsigned int* A, int left, int right) {
+    unsigned int lambda = median(A[(left + right)/2], A[left], A[right]);
+
+    while (left < right) {
+        while (A[left] < lambda) {
+            left = left + 1;
+        }
+
+        while (A[right] > lambda) {
+            right = right - 1;
+        }
+
+        if (left < right) {
+            if (A[left] != A[right]) {
+                std::swap(A[left], A[right]);
+            }
+            if (right - left == 1) {
+                right = left;
+            } else {
+                left = left + 1;
+                right = right - 1;
+            }
+        }
+    }
+
+    return left;
+
+
+
+
+
+    /*if (l!=r)
         std::swap(A[l + rand() % (r - l)], A[r]);
     unsigned int x = A[r];
     int i = l-1;
@@ -128,7 +172,7 @@ int partition(unsigned int* A, const int l, const int r) {
         if (A[j] <= x)
             std::swap(A[++i],A[j]);
     }
-    return i;
+    return i;*/
 }
 
 // Kth order statistic
@@ -170,7 +214,7 @@ int main(int argc, char *argv[]) {
     if (argc >= 2) {
         input_file = argv[1];
     } else {
-        //input_file = "/Users/red_lion/Documents/Projects/GitHub/algorithms-lits/hamstr/inputData/12.in";
+        //input_file = "/Users/red_lion/Documents/Projects/GitHub/algorithms-lits/hamstr/inputData/11.in";
         //input_file = "D:\\Projects\\GitHub\\algorithms-lits\\hamstr\\inputData\\12.in";
         input_file = "hamstr.in";
     }
