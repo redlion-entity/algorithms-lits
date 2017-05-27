@@ -1,123 +1,4 @@
 #include <iostream>
-#include <cassert>
-#include <stdio.h>
-#include <stdlib.h>
-#include "rb_tree.h"
-//#include <vector>
-#include "_generate.h"
-
-//using namespace std;
-
-/*
- * Compare two nodes
- */
-/*int compare_int(void* leftp, void* rightp)
-{
-    int left = (long)leftp;
-    int right = (long)rightp;
-    if (left < right)
-        return -1;
-    else if (left > right)
-        return 1;
-    else
-    {
-        assert (left == right);
-        return 0;
-    }
-}*/
-/*
- * Print RBTRee
- */
-/*void print_tree_helper(node n, int indent)
-{
-    int i;
-    if (n == NULL)
-    {
-        fputs("<empty tree>", stdout);
-        return;
-    }
-    if (n->right != NULL)
-    {
-        print_tree_helper(n->right, indent + INDENT_STEP);
-    }
-    for(i = 0; i < indent; i++)
-        fputs(" ", stdout);
-    if (n->color == BLACK)
-        cout<<(long)n->key<<endl;
-    else
-        cout<<"<"<<(long)n->key<<">"<<endl;
-    if (n->left != NULL)
-    {
-        print_tree_helper(n->left, indent + INDENT_STEP);
-    }
-}*/
-
-/*void print_tree(rbtree t)
-{
-    print_tree_helper(t->root, 0);
-    puts("");
-}*/
-
-/*
- * Main Contains Menu
- */
-/*
-int main()
-{
-    int i;
-    RBTree rbt;
-    rbtree t = rbt.rbtree_create();
-    for (i = 0; i < 12; i++)
-    {
-        int x = rand() % 10;
-        int y = rand() % 10;
-        print_tree(t);
-        cout<<"Inserting "<<x<<" -> "<<y<<endl<<endl;
-        rbt.rbtree_insert(t, (void*)x, (void*)y, compare_int);
-        assert(rbt.rbtree_lookup(t, (void*)x, compare_int) == (void*)y);
-    }
-    for (i = 0; i < 15; i++)
-    {
-        int x = rand() % 10;
-        print_tree(t);
-        cout<<"Deleting key "<<x<<endl<<endl;
-        rbt.rbtree_delete(t, (void*)x, compare_int);
-    }
-    return 0;
-}*/
-
-/*bool hasHamstersCombination(const int k, const int n, unsigned int* food, const unsigned int food_limit) {
-    int *vector = NULL;
-    int gen_result;
-    bool result = false;
-
-    vector = new int[k];
-
-    // initialize
-    gen_result = gen_comb_norep_lex_init(vector, k, n);
-
-    //generate all successors
-    while (gen_result == GEN_NEXT) {
-        unsigned int sum = 0;
-
-        for (int i = 0; i < k; i++) {
-            sum += food[vector[i]];
-        }
-
-        if (sum <= food_limit) {
-            result = true;
-            break;
-        }
-
-        gen_result = gen_comb_norep_lex_next(vector, k, n);
-    }
-
-    if (vector != NULL) {
-        delete [] vector;
-    }
-
-    return result;
-}*/
 
 #define MAX(a, b)   ((a > b) ? a : b)
 #define MIN(a, b)   ((a < b) ? a : b)
@@ -134,11 +15,18 @@ int median(unsigned int a, unsigned int b, unsigned int c)
 }
 
 int partition(unsigned int* A, int left, int right) {
+    int idx = left;
     unsigned int lambda = median(A[(left + right)/2], A[left], A[right]);
 
     while (left < right) {
         while (A[left] < lambda) {
             left = left + 1;
+        }
+
+        if (left <= right) {
+            idx = left;
+        } else {
+            idx = right;
         }
 
         while (A[right] > lambda) {
@@ -149,50 +37,33 @@ int partition(unsigned int* A, int left, int right) {
             if (A[left] != A[right]) {
                 std::swap(A[left], A[right]);
             }
-            if (right - left == 1) {
-                right = left;
-            } else {
-                left = left + 1;
-                right = right - 1;
-            }
+            left = left + 1;
+            right = right - 1;
         }
     }
 
-    return left;
-
-
-
-
-
-    /*if (l!=r)
-        std::swap(A[l + rand() % (r - l)], A[r]);
-    unsigned int x = A[r];
-    int i = l-1;
-    for (int j = l; j <= r; j++) {
-        if (A[j] <= x)
-            std::swap(A[++i],A[j]);
-    }
-    return i;*/
+    return idx;
 }
 
-// Kth order statistic
-unsigned int nth(const int k, unsigned int* A, const int length) {
+// Partial quick sorting
+void qSort(const int k, unsigned int* A, const int length) {
     int l = 0, r = length - 1;
     for(;;) {
         int pos = partition(A, l, r);
+
         if (pos < k)
-            l = pos + 1;
+            l = pos == l ? pos + 1 : pos;
         else if (pos > k)
-            r = pos - 1;
-        else return A[k];
+            r = pos == r ? pos - 1 : pos;
+        else return;
     }
 }
 
-unsigned int calculateFood(const int quantity, unsigned int* food, const int length) {
-    unsigned int sum = 0;
+unsigned long int calculateFood(const int quantity, unsigned int* food, const int length) {
+    unsigned long int sum = 0;
 
-    // find Kth oder statistic to divide the array into two parts larger and smaller
-    nth(quantity - 1, food, length);
+    // partial quick sorting to divide the array into two parts larger and smaller
+    qSort(quantity - 1, food, length);
 
     for (int i = 0; i < quantity; i++) {
         sum += food[i];
@@ -214,7 +85,7 @@ int main(int argc, char *argv[]) {
     if (argc >= 2) {
         input_file = argv[1];
     } else {
-        //input_file = "/Users/red_lion/Documents/Projects/GitHub/algorithms-lits/hamstr/inputData/11.in";
+        //input_file = "/Users/red_lion/Documents/Projects/GitHub/algorithms-lits/hamstr/inputData/12.in";
         //input_file = "D:\\Projects\\GitHub\\algorithms-lits\\hamstr\\inputData\\12.in";
         input_file = "hamstr.in";
     }
@@ -251,12 +122,11 @@ int main(int argc, char *argv[]) {
     do {
         middle = (right + left) / 2;
 
-        // calculate thу food for each hamster
+        // calculate the food for each hamster
         for (i = 0; i < hamsters_quantity; i++) {
             hamster_food[i] = hamster_norm[i] + (middle - 1) * hamster_greed[i];
         }
 
-        //if (hasHamstersCombination(middle, hamsters_quantity, hamster_food, food_limit)) {
         if (calculateFood(middle, hamster_food, hamsters_quantity) <= food_limit) {
             max_hamsters = middle;
             left = middle;
@@ -265,7 +135,12 @@ int main(int argc, char *argv[]) {
         }
 
         if (right - left == 1) {
-            left = right;
+            if (left == middle || left == max_hamsters) {
+                left = right;
+            } else {
+                middle = left - 1;
+                right = left;
+            }
         }
 
     } while (left < middle || middle < right);
@@ -274,9 +149,9 @@ int main(int argc, char *argv[]) {
 
     /*printf("Food limit: %d\n", food_limit);
     printf("Hamsters quantity: %d\n", hamsters_quantity);
-//    for (i = 0; i < hamsters_quantity; i++) {
-//        printf("%u %u\n", hamster_norm[i], hamster_greed[i]);
-//    }
+    for (i = 0; i < hamsters_quantity; i++) {
+        printf("%u %u\n", hamster_norm[i], hamster_greed[i]);
+    }
     printf("Hamsters: %d\n", max_hamsters);*/
 
 
