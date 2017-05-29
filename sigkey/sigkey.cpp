@@ -1,3 +1,4 @@
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
@@ -6,7 +7,7 @@
 
 void transformKeys(char** keys, unsigned int* keys_transformed, const int quantity, int* bit_table, int* odd, int* even) {
     for (int i = 0; i < quantity; i++) {
-        int length = std::strlen(keys[i]);
+        int length = strlen(keys[i]);
         keys_transformed[i] = 0;
         for (int j = 0; j < length; j++) {
             keys_transformed[i] += bit_table[(int)keys[i][j] - 97];
@@ -146,7 +147,7 @@ int main(int argc, char *argv[]) {
 
     while(fscanf(fp, "%s", str) != EOF) {
         keys[i] = new char[27];
-        std::strcpy(keys[i], str);
+        strcpy(keys[i], str);
         i++;
     }
     fclose(fp);
